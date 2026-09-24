@@ -1,0 +1,19 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Android Adaptive Icon Foreground (Transparent background, centered in safe zone) -->
+  
+  <!-- Subtle Zen Focus Ring -->
+  <circle cx="256" cy="256" r="140" stroke="#8FA89B" stroke-width="3" stroke-dasharray="12 12" opacity="0.35"/>
+
+  <!-- Smartphone in physical flip motion -->
+  <g transform="translate(206, 156)">
+    <!-- Phone Body -->
+    <rect x="0" y="0" width="100" height="170" rx="24" stroke="#8FA89B" stroke-width="10" fill="#000000"/>
+    <!-- Top Speaker -->
+    <line x1="32" y1="20" x2="68" y2="20" stroke="#8FA89B" stroke-width="6" stroke-linecap="round"/>
+    <!-- Bottom Sensor Indicator -->
+    <circle cx="50" cy="140" r="7" fill="#8FA89B"/>
+    <!-- Haptic Pulse Waves -->
+    <path d="M125 45C150 70 150 105 125 130" stroke="#8FA89B" stroke-width="10" stroke-linecap="round" opacity="0.85"/>
+    <path d="M152 25C190 60 190 120 152 150" stroke="#8FA89B" stroke-width="8" stroke-linecap="round" opacity="0.4"/>
+  </g>
+</svg>
