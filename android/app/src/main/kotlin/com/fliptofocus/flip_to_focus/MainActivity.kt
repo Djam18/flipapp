@@ -8,6 +8,9 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import android.provider.Settings
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -19,6 +22,7 @@ class MainActivity : FlutterActivity(), SensorEventListener {
 
     private val SENSOR_CHANNEL = "com.fliptofocus.app/flip_sensor"
     private val DND_CHANNEL = "com.fliptofocus.app/dnd"
+    private val VIBRATION_CHANNEL = "com.fliptofocus.app/vibration"
 
     private lateinit var sensorManager: SensorManager
     private var gravitySensor: Sensor? = null
@@ -90,6 +94,65 @@ class MainActivity : FlutterActivity(), SensorEventListener {
                 }
                 else -> result.notImplemented()
             }
+        }
+
+        // MethodChannel for 100% functional native hardware vibration
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, VIBRATION_CHANNEL).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "vibrate" -> {
+                    val type = call.argument<String>("type") ?: "light"
+                    triggerHardwareVibration(type)
+                    result.success(true)
+                }
+                else -> result.notImplemented()
+            }
+        }
+    }
+
+    private fun triggerHardwareVibration(type: String) {
+        try {
+            val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val vibratorManager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
+                vibratorManager?.defaultVibrator
+            } else {
+                @Suppress("DEPRECATION")
+                getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+            }
+
+            if (vibrator == null || !vibrator.hasVibrator()) return
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val effect = when (type) {
+                    "light" -> {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                            VibrationEffect.createPredefined(VibrationEffect.EFFECT_CLICK)
+                        } else {
+                            VibrationEffect.createOneShot(25, 100)
+                        }
+                    }
+                    "success" -> {
+                        val timings = longArrayOf(0, 50, 75, 100)
+                        val amplitudes = intArrayOf(0, 160, 0, 240)
+                        VibrationEffect.createWaveform(timings, amplitudes, -1)
+                    }
+                    "alert" -> {
+                        val timings = longArrayOf(0, 120, 80, 150)
+                        val amplitudes = intArrayOf(0, 255, 0, 255)
+                        VibrationEffect.createWaveform(timings, amplitudes, -1)
+                    }
+                    else -> VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE)
+                }
+                vibrator.vibrate(effect)
+            } else {
+                @Suppress("DEPRECATION")
+                when (type) {
+                    "light" -> vibrator.vibrate(25)
+                    "success" -> vibrator.vibrate(longArrayOf(0, 50, 75, 100), -1)
+                    "alert" -> vibrator.vibrate(longArrayOf(0, 120, 80, 150), -1)
+                    else -> vibrator.vibrate(50)
+                }
+            }
+        } catch (_: Exception) {
         }
     }
 
