@@ -1,0 +1,3 @@
+# Fastlane Appfile for Flip to Focus Android
+package_name("com.fliptofocus.app")
+json_key_file(ENV["GOOGLE_PLAY_JSON_KEY"] || "play_store_credentials.json")

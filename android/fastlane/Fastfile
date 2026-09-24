@@ -1,0 +1,34 @@
+# Fastlane configuration for Flip to Focus Android
+default_platform(:android)
+
+platform :android do
+  desc "Runs code quality checks and tests"
+  lane :test do
+    sh("cd ../.. && flutter analyze")
+    sh("cd ../.. && flutter test")
+  end
+
+  desc "Builds standalone release APK"
+  lane :build_apk do
+    test
+    sh("cd ../.. && flutter build apk --release")
+  end
+
+  desc "Builds production Android App Bundle (AAB)"
+  lane :build_bundle do
+    test
+    sh("cd ../.. && flutter build appbundle --release")
+  end
+
+  desc "Deploys release bundle to Google Play Internal App Sharing"
+  lane :deploy_internal do
+    build_bundle
+    upload_to_play_store(
+      track: 'internal',
+      aab: '../build/app/outputs/bundle/release/app-release.aab',
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+  end
+end
