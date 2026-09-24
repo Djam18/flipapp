@@ -7,7 +7,12 @@ import '../../analytics/presentation/analytics_controller.dart';
 import '../../analytics/presentation/analytics_screen.dart';
 import '../../settings/presentation/settings_screen.dart';
 import '../domain/focus_session_state.dart';
+import 'blackout_screen.dart';
 import 'focus_session_controller.dart';
+import 'session_summary_screen.dart';
+import 'widgets/active_focus_visual.dart';
+import 'widgets/standby_veille_visual.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// Primary "Cockpit" screen for Flip to Focus.
 class CockpitScreen extends ConsumerWidget {
@@ -18,24 +23,29 @@ class CockpitScreen extends ConsumerWidget {
     final sessionState = ref.watch(focusSessionProvider);
     final controller = ref.read(focusSessionProvider.notifier);
 
+    final isSessionActive = sessionState.status == SessionStatus.focusing ||
+        sessionState.status == SessionStatus.arming;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: Stack(
           children: [
             // Main Cockpit UI
-            Padding(
+            SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
               child: Column(
                 children: [
+                  const SizedBox(height: AppSpacing.sm),
+                  if (!isSessionActive) _buildHeader(context, ref),
                   const SizedBox(height: AppSpacing.md),
-                  _buildHeader(context, ref),
-                  const Spacer(),
                   _buildCenterTarget(context, sessionState, controller),
-                  const Spacer(),
-                  _buildDurationSelector(sessionState, controller),
-                  const SizedBox(height: AppSpacing.lg),
-                  _buildIntentionSelector(context, sessionState, controller),
+                  const SizedBox(height: AppSpacing.md),
+                  if (!isSessionActive) ...[
+                    _buildDurationSelector(sessionState, controller),
+                    const SizedBox(height: AppSpacing.md),
+                    _buildIntentionSelector(context, sessionState, controller),
+                  ],
                   const SizedBox(height: AppSpacing.md),
                   _buildSimulationControls(controller, sessionState),
                   const SizedBox(height: AppSpacing.sm),
@@ -62,11 +72,12 @@ class CockpitScreen extends ConsumerWidget {
 
   /// Header: Settings, Today's metrics, and Journal
   Widget _buildHeader(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final analyticsAsync = ref.watch(analyticsProvider);
     final todayMinutes = analyticsAsync.asData?.value.todayFocusMinutes ?? 0;
     final todayText = todayMinutes >= 60
-        ? '${todayMinutes ~/ 60}h ${todayMinutes % 60}m Deep Work'
-        : '${todayMinutes}m Deep Work';
+        ? '${todayMinutes ~/ 60}h ${todayMinutes % 60}m ${l10n.deepWork}'
+        : '${todayMinutes}m ${l10n.deepWork}';
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -81,7 +92,7 @@ class CockpitScreen extends ConsumerWidget {
         ),
         Column(
           children: [
-            Text('TODAY', style: AppTypography.label),
+            Text(l10n.today, style: AppTypography.label),
             const SizedBox(height: 2),
             Text(
               todayText,
@@ -101,75 +112,120 @@ class CockpitScreen extends ConsumerWidget {
     );
   }
 
-  /// Core Visual Target: Pulsing ring prompting the user to flip phone face-down
+  /// Core Visual Target: Screen 1 (VEILLE) when idle, Screen 2 (TIMER ACTIF) when focusing
   Widget _buildCenterTarget(
     BuildContext context,
     FocusSessionState state,
     FocusSessionNotifier controller,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     final isFocusing = state.status == SessionStatus.focusing;
     final isArming = state.status == SessionStatus.arming;
 
-    String primaryText = 'FLIP SCREEN';
-    String secondaryText = 'FACE DOWN TO FOCUS';
-    Color ringColor = AppColors.border;
-
-    if (isArming) {
-      primaryText = 'STABILIZING...';
-      secondaryText = '3 SECONDS';
-      ringColor = AppColors.accentAmber;
-    } else if (isFocusing) {
-      primaryText = 'DEEP FOCUS';
-      secondaryText = 'ACTIVE';
-      ringColor = AppColors.accent;
+    if (isFocusing || isArming) {
+      return ActiveFocusVisual(
+        elapsedSeconds: state.elapsedSeconds,
+        targetMinutes: state.targetMinutes,
+        focusScore: 88,
+        distractionCount: 0,
+        onTapGauge: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const BlackoutScreen()),
+          );
+        },
+        onCoffeeBreak: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${l10n.deepWork} - 5 min break'),
+              backgroundColor: AppColors.surfaceElevated,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        },
+        onPauseOrStop: () {
+          controller.onFlipUp();
+        },
+        onOpenSettings: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const SettingsScreen()),
+          );
+        },
+      );
     }
 
+    // Screen 1: VEILLE (Standby)
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          width: 220,
-          height: 220,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: ringColor, width: 3),
-            boxShadow: isFocusing
-                ? const [
-                    BoxShadow(
-                      color: AppColors.accentGlow,
-                      blurRadius: 30,
-                      spreadRadius: 8,
-                    )
-                  ]
-                : [],
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.stay_current_portrait_rounded,
-                size: 38,
-                color: isFocusing ? AppColors.accent : AppColors.textSecondary,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                primaryText,
-                style: AppTypography.button.copyWith(
-                  letterSpacing: 1.5,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                secondaryText,
-                style: AppTypography.label.copyWith(fontSize: 10),
-              ),
-            ],
+        // Top Veille Lock Icon & Titles
+        const Icon(
+          Icons.lock_outline,
+          size: 24,
+          color: AppColors.accent,
+        ),
+        const SizedBox(height: 6),
+        Text(
+          l10n.flipPhoneFor,
+          style: AppTypography.caption.copyWith(
+            color: AppColors.textSecondary,
+            letterSpacing: 1.2,
           ),
         ),
+        const SizedBox(height: 2),
+        Text(
+          l10n.deepWork,
+          style: AppTypography.titleLarge.copyWith(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 2.0,
+            color: AppColors.textPrimary,
+          ),
+        ),
+
         const SizedBox(height: AppSpacing.lg),
+
+        // Concentric waves with isometric smartphone
+        StandbyVeilleVisual(
+          onTap: () => controller.onFlipDown(),
+        ),
+
+        const SizedBox(height: AppSpacing.md),
+
+        // Instructional interactive pill
+        GestureDetector(
+          onTap: () => controller.onFlipDown(),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  l10n.flipScreen,
+                  style: AppTypography.button.copyWith(
+                    letterSpacing: 1.5,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.accent,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  l10n.faceDownToFocus,
+                  style: AppTypography.label.copyWith(
+                    fontSize: 10,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        const SizedBox(height: AppSpacing.md),
         Text(
           _formatTime(state.elapsedSeconds, state.targetMinutes),
           style: AppTypography.timerDisplay,
@@ -190,36 +246,39 @@ class CockpitScreen extends ConsumerWidget {
       (label: '90 min', minutes: 90),
     ];
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: durations.map((item) {
-        final isSelected = state.targetMinutes == item.minutes;
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: GestureDetector(
-            onTap: () => controller.setTargetDuration(item.minutes),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 150),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: isSelected ? AppColors.accent : AppColors.surface,
-                borderRadius: BorderRadius.circular(AppSpacing.radiusSmall),
-                border: Border.all(
-                  color: isSelected ? AppColors.accent : AppColors.border,
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: durations.map((item) {
+          final isSelected = state.targetMinutes == item.minutes;
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: GestureDetector(
+              onTap: () => controller.setTargetDuration(item.minutes),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  color: isSelected ? AppColors.accent : AppColors.surface,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSmall),
+                  border: Border.all(
+                    color: isSelected ? AppColors.accent : AppColors.border,
+                  ),
                 ),
-              ),
-              child: Text(
-                item.label,
-                style: AppTypography.button.copyWith(
-                  fontSize: 13,
-                  color: isSelected ? AppColors.background : AppColors.textSecondary,
-                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                child: Text(
+                  item.label,
+                  style: AppTypography.button.copyWith(
+                    fontSize: 13,
+                    color: isSelected ? AppColors.background : AppColors.textSecondary,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  ),
                 ),
               ),
             ),
-          ),
-        );
-      }).toList(),
+          );
+        }).toList(),
+      ),
     );
   }
 
@@ -241,9 +300,12 @@ class CockpitScreen extends ConsumerWidget {
         children: [
           const Icon(Icons.edit_note_rounded, size: 18, color: AppColors.accentAmber),
           const SizedBox(width: 8),
-          Text(
-            state.intentionTag ?? 'Set intention (e.g., Code)',
-            style: AppTypography.bodyRegular.copyWith(fontSize: 13),
+          Flexible(
+            child: Text(
+              state.intentionTag ?? 'Set intention (e.g., Code)',
+              style: AppTypography.bodyRegular.copyWith(fontSize: 13),
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
       ),
@@ -264,15 +326,19 @@ class CockpitScreen extends ConsumerWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          TextButton.icon(
-            icon: const Icon(Icons.phone_android, size: 16, color: AppColors.accent),
-            label: const Text('Simulate: Flip Down', style: TextStyle(color: AppColors.accent, fontSize: 12)),
-            onPressed: () => controller.onFlipDown(),
+          Expanded(
+            child: TextButton.icon(
+              icon: const Icon(Icons.phone_android, size: 16, color: AppColors.accent),
+              label: const Text('Flip Down', style: TextStyle(color: AppColors.accent, fontSize: 12), overflow: TextOverflow.ellipsis),
+              onPressed: () => controller.onFlipDown(),
+            ),
           ),
-          TextButton.icon(
-            icon: const Icon(Icons.pan_tool, size: 16, color: AppColors.danger),
-            label: const Text('Simulate: Lift Up', style: TextStyle(color: AppColors.danger, fontSize: 12)),
-            onPressed: () => controller.onFlipUp(),
+          Expanded(
+            child: TextButton.icon(
+              icon: const Icon(Icons.pan_tool, size: 16, color: AppColors.danger),
+              label: const Text('Lift Up', style: TextStyle(color: AppColors.danger, fontSize: 12), overflow: TextOverflow.ellipsis),
+              onPressed: () => controller.onFlipUp(),
+            ),
           ),
         ],
       ),
@@ -356,7 +422,7 @@ class CockpitScreen extends ConsumerWidget {
             '${(state.elapsedSeconds / 60).round()} minutes of Deep Work',
             style: AppTypography.timerSub,
           ),
-          const SizedBox(height: AppSpacing.xl),
+          const SizedBox(height: AppSpacing.lg),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.accent,
@@ -366,8 +432,23 @@ class CockpitScreen extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
               ),
             ),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => SessionSummaryScreen(
+                    durationMinutes: (state.elapsedSeconds / 60).round(),
+                    intentionTag: state.intentionTag,
+                    isCompleted: true,
+                  ),
+                ),
+              );
+            },
+            child: Text('Open Debrief & Reflection', style: AppTypography.button.copyWith(color: AppColors.background)),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          TextButton(
             onPressed: () => controller.resetToIdle(),
-            child: Text('Continue (OK)', style: AppTypography.button.copyWith(color: AppColors.background)),
+            child: const Text('Dismiss', style: TextStyle(color: AppColors.textSecondary)),
           ),
         ],
       ),
@@ -411,8 +492,23 @@ class CockpitScreen extends ConsumerWidget {
                 side: const BorderSide(color: AppColors.border),
               ),
             ),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => SessionSummaryScreen(
+                    durationMinutes: (state.elapsedSeconds / 60).round(),
+                    intentionTag: state.intentionTag,
+                    isCompleted: false,
+                  ),
+                ),
+              );
+            },
+            child: const Text('View Summary & Notes'),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          TextButton(
             onPressed: () => controller.resetToIdle(),
-            child: const Text('Back to Cockpit'),
+            child: const Text('Dismiss', style: TextStyle(color: AppColors.textSecondary)),
           ),
         ],
       ),
