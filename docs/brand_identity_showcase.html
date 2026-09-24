@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flip to Focus — Charte Graphique & Déclinaisons de Logo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Palette A : Obsidian & Sage (Défaut) */
+      --bg-color: #000000;
+      --surface-color: #121214;
+      --surface-elevated: #1E1E22;
+      --text-primary: #F5F5F7;
+      --text-secondary: #8E8E93;
+      --text-muted: #48484A;
+      --accent: #8FA89B;
+      --accent-glow: rgba(143, 168, 155, 0.2);
+      --danger: #E26D5C;
+      --warning: #D97706;
+      --border-color: #26262A;
+    }
+
+    [data-theme="monochrome"] {
+      --bg-color: #050505;
+      --surface-color: #161616;
+      --surface-elevated: #242424;
+      --text-primary: #FFFFFF;
+      --text-secondary: #A1A1A6;
+      --text-muted: #555555;
+      --accent: #E5E5EA;
+      --accent-glow: rgba(255, 255, 255, 0.15);
+      --danger: #C0C0C0;
+      --warning: #888888;
+      --border-color: #333333;
+    }
+
+    [data-theme="amber"] {
+      --bg-color: #0C0A09;
+      --surface-color: #1C1917;
+      --surface-elevated: #292524;
+      --text-primary: #F5F5F4;
+      --text-secondary: #A8A29E;
+      --text-muted: #57534E;
+      --accent: #D97706;
+      --accent-glow: rgba(217, 119, 6, 0.2);
+      --danger: #EF4444;
+      --warning: #F59E0B;
+      --border-color: #44403C;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-primary);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      padding: 40px 24px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 48px;
+      padding-bottom: 32px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      background: var(--surface-elevated);
+      color: var(--accent);
+      border-radius: 999px;
+      border: 1px solid var(--border-color);
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      font-size: 38px;
+      font-weight: 700;
+      letter-spacing: -1px;
+      margin-bottom: 12px;
+    }
+
+    p.subtitle {
+      font-size: 17px;
+      color: var(--text-secondary);
+      max-width: 650px;
+      margin: 0 auto;
+    }
+
+    /* THEME SWITCHER */
+    .theme-selector-box {
+      background: var(--surface-color);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 48px;
+      text-align: center;
+    }
+
+    .theme-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+
+    .theme-btn {
+      padding: 12px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 12px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      background: var(--surface-elevated);
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .theme-btn.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 15px var(--accent-glow);
+    }
+
+    .theme-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    /* SECTIONS */
+    section {
+      margin-bottom: 64px;
+    }
+
+    h2 {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-left: 4px solid var(--accent);
+      padding-left: 12px;
+    }
+
+    /* 5 LOGOS GRID */
+    .logos-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+    }
+
+    .logo-card {
+      background: var(--surface-color);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      position: relative;
+    }
+
+    .logo-card.full-width {
+      grid-column: 1 / -1;
+    }
+
+    .logo-card .label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+
+    .logo-card .desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+    }
+
+    .logo-display {
+      width: 100%;
+      min-height: 140px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      border-radius: 12px;
+      background: var(--bg-color);
+      border: 1px dashed var(--border-color);
+    }
+
+    .logo-display.light-mode {
+      background: #F5F5F7;
+      border-color: #D1D1D6;
+    }
+
+    /* COLOR SWATCHES */
+    .swatches-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+    }
+
+    .swatch-card {
+      background: var(--surface-color);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .swatch-color {
+      height: 90px;
+      width: 100%;
+    }
+
+    .swatch-info {
+      padding: 14px;
+    }
+
+    .swatch-name {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .swatch-hex {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .swatch-role {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    /* LIVE UI SIMULATION */
+    .ui-mockup-wrapper {
+      display: flex;
+      justify-content: center;
+      margin-top: 32px;
+    }
+
+    .mobile-frame {
+      width: 340px;
+      background: var(--bg-color);
+      border: 10px solid var(--surface-elevated);
+      border-radius: 44px;
+      padding: 24px 18px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+      text-align: center;
+      position: relative;
+    }
+
+    .notch {
+      width: 90px;
+      height: 18px;
+      background: var(--surface-elevated);
+      border-radius: 0 0 12px 12px;
+      margin: -24px auto 20px;
+    }
+
+    .phone-timer {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 42px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 16px 0;
+    }
+
+    .phone-ring {
+      width: 140px;
+      height: 140px;
+      margin: 16px auto;
+      border-radius: 50%;
+      border: 4px solid var(--border-color);
+      border-top-color: var(--accent);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      animation: pulse 3s infinite ease-in-out;
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 var(--accent-glow); }
+      50% { box-shadow: 0 0 25px 8px var(--accent-glow); }
+    }
+
+    .phone-btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      border-radius: 14px;
+      font-weight: 600;
+      font-size: 14px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <div class="badge">Brand Identity & Design System</div>
+      <h1>Flip to Focus — Charte Graphique</h1>
+      <p class="subtitle">Testez en direct les 3 directions artistiques et découvrez les 5 déclinaisons indispensables du logo.</p>
+    </header>
+
+    <!-- SELECTEUR INTERACTIF DE PALETTE -->
+    <div class="theme-selector-box">
+      <span style="font-size: 13px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">
+        Cliquez pour changer la charte graphique en direct :
+      </span>
+      <div class="theme-buttons">
+        <button class="theme-btn active" onclick="setTheme('default', this)">
+          <span class="theme-dot" style="background: #8FA89B;"></span>
+          1. Obsidian & Sage (Zen Recommandé)
+        </button>
+        <button class="theme-btn" onclick="setTheme('monochrome', this)">
+          <span class="theme-dot" style="background: #E5E5EA;"></span>
+          2. Monochrome Monastique (E-Ink)
+        </button>
+        <button class="theme-btn" onclick="setTheme('amber', this)">
+          <span class="theme-dot" style="background: #D97706;"></span>
+          3. Warm Amber & Coffee (Chaleur)
+        </button>
+      </div>
+    </div>
+
+    <!-- SECTION 1 : LES 5 VERSIONS DE LOGO -->
+    <section>
+      <h2>Les 5 Versions et Déclinaisons de Logo</h2>
+      <p style="color: var(--text-secondary); margin-bottom: 24px;">
+        Conformément aux standards de branding, une identité visuelle complète doit disposer de 5 déclinaisons strictes pour s'adapter à toutes les résolutions, contraintes d'espace et supports.
+      </p>
+
+      <div class="logos-grid">
+        
+        <!-- VERSION 1 : LOGO PRINCIPAL -->
+        <div class="logo-card full-width">
+          <div class="label">1. Le Logo Principal (Bloc-Marque Master)</div>
+          <div class="desc">Version officielle complète avec symbole géométrique, typographie principale et baseline de marque. Utilisée sur le site web, les bannières et les documents officiels.</div>
+          <div class="logo-display">
+            <svg width="340" height="60" viewBox="0 0 340 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- Symbole Flip -->
+              <rect x="2" y="8" width="30" height="44" rx="7" stroke="var(--accent)" stroke-width="2.5"/>
+              <line x1="8" y1="13" x2="16" y2="13" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="17" cy="45" r="2" fill="var(--accent)"/>
+              <path d="M38 18C44 24 44 36 38 42" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+              <path d="M44 14C52 22 52 38 44 46" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
+              
+              <!-- Typographie -->
+              <text x="65" y="32" fill="var(--text-primary)" font-family="Inter" font-size="20" font-weight="700" letter-spacing="1">FLIP TO FOCUS</text>
+              <text x="65" y="47" fill="var(--text-secondary)" font-family="Inter" font-size="10" font-weight="500" letter-spacing="2">DESIGNED FOR DEEP WORK</text>
+            </svg>
+          </div>
+        </div>
+
+        <!-- VERSION 2 : LOGO SECONDAIRE EMPILÉ -->
+        <div class="logo-card">
+          <div class="label">2. Le Logo Secondaire (Empilé / Vertical)</div>
+          <div class="desc">Pour les espaces carrés, photos de profil, en-têtes de newsletters et cartes de visite.</div>
+          <div class="logo-display">
+            <svg width="180" height="130" viewBox="0 0 180 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- Symbole centré -->
+              <g transform="translate(68, 10)">
+                <rect x="0" y="0" width="32" height="46" rx="7" stroke="var(--accent)" stroke-width="2.5"/>
+                <circle cx="16" cy="38" r="2" fill="var(--accent)"/>
+                <path d="M38 12C43 18 43 28 38 34" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+              </g>
+              <text x="90" y="85" text-anchor="middle" fill="var(--text-primary)" font-family="Inter" font-size="16" font-weight="700" letter-spacing="1">FLIP TO FOCUS</text>
+              <text x="90" y="105" text-anchor="middle" fill="var(--text-secondary)" font-family="Inter" font-size="9" font-weight="500" letter-spacing="2">DEEP WORK</text>
+            </svg>
+          </div>
+        </div>
+
+        <!-- VERSION 3 : L'ICÔNE SEULE (APP ICON & SUBMARK) -->
+        <div class="logo-card">
+          <div class="label">3. L'Icône d'Application (App Icon / Submark)</div>
+          <div class="desc">Format 1:1 épuré pour l'icône Google Play (512x512), favicons et Splash Screen de démarrage.</div>
+          <div class="logo-display">
+            <svg width="84" height="84" viewBox="0 0 84 84" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect width="84" height="84" rx="22" fill="var(--surface-elevated)" stroke="var(--border-color)"/>
+              <g transform="translate(24, 18)">
+                <rect x="0" y="0" width="32" height="48" rx="8" stroke="var(--accent)" stroke-width="3"/>
+                <line x1="8" y1="6" x2="16" y2="6" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="16" cy="40" r="2.5" fill="var(--accent)"/>
+                <!-- Ondes de bascule -->
+                <path d="M38 14C43 20 43 30 38 36" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" opacity="0.7"/>
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        <!-- VERSION 4 : LE LOGO TYPOGRAPHIQUE (WORDMARK) -->
+        <div class="logo-card">
+          <div class="label">4. Le Logo Typographique (Wordmark / Nom seul)</div>
+          <div class="desc">Le nom de marque sans le symbole pour les barres de navigation compactes, footers et mentions presse.</div>
+          <div class="logo-display">
+            <svg width="240" height="50" viewBox="0 0 240 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <text x="120" y="32" text-anchor="middle" fill="var(--text-primary)" font-family="'JetBrains Mono', monospace" font-size="18" font-weight="700" letter-spacing="3">FLIP//FOCUS</text>
+            </svg>
+          </div>
+        </div>
+
+        <!-- VERSION 5 : LE LOGO MONOCHROME & NÉGATIF (REVERSE) -->
+        <div class="logo-card">
+          <div class="label">5. Le Logo Monochrome & Négatif (Noir & Blanc)</div>
+          <div class="desc">Version silhouette 100% monochrome pour documents administratifs, tampons, goodies ou fonds clairs.</div>
+          <div class="logo-display light-mode">
+            <svg width="220" height="50" viewBox="0 0 220 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="4" y="6" width="22" height="34" rx="5" stroke="#000000" stroke-width="2.5"/>
+              <circle cx="15" cy="34" r="1.5" fill="#000000"/>
+              <text x="40" y="28" fill="#000000" font-family="Inter" font-size="16" font-weight="800" letter-spacing="1">FLIP TO FOCUS</text>
+              <text x="40" y="39" fill="#555555" font-family="Inter" font-size="8" font-weight="600" letter-spacing="1.5">MONOCHROME INVERSÉ</text>
+            </svg>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECTION 2 : PALETTE DES COULEURS DU THÈME ACTIF -->
+    <section>
+      <h2>La Palette Chromatique Active</h2>
+      <div class="swatches-grid">
+        <div class="swatch-card">
+          <div class="swatch-color" style="background: var(--bg-color); border: 1px solid var(--border-color);"></div>
+          <div class="swatch-info">
+            <div class="swatch-name">Background</div>
+            <div class="swatch-hex" id="hex-bg">#000000</div>
+            <div class="swatch-role">Noir OLED pur (pixels éteints)</div>
+          </div>
+        </div>
+
+        <div class="swatch-card">
+          <div class="swatch-color" style="background: var(--surface-color);"></div>
+          <div class="swatch-info">
+            <div class="swatch-name">Surface</div>
+            <div class="swatch-hex" id="hex-surface">#121214</div>
+            <div class="swatch-role">Cartes, modales, fonds élevés</div>
+          </div>
+        </div>
+
+        <div class="swatch-card">
+          <div class="swatch-color" style="background: var(--accent);"></div>
+          <div class="swatch-info">
+            <div class="swatch-name">Accent (Focus)</div>
+            <div class="swatch-hex" id="hex-accent">#8FA89B</div>
+            <div class="swatch-role">Point d'attention, succès, vie</div>
+          </div>
+        </div>
+
+        <div class="swatch-card">
+          <div class="swatch-color" style="background: var(--text-primary);"></div>
+          <div class="swatch-info">
+            <div class="swatch-name">Texte Titane</div>
+            <div class="swatch-hex" id="hex-text">#F5F5F7</div>
+            <div class="swatch-role">Chiffres, titres, non-éblouissant</div>
+          </div>
+        </div>
+
+        <div class="swatch-card">
+          <div class="swatch-color" style="background: var(--danger);"></div>
+          <div class="swatch-info">
+            <div class="swatch-name">Alerte Grâce</div>
+            <div class="swatch-hex" id="hex-danger">#E26D5C</div>
+            <div class="swatch-role">Terracotta (ferme sans panique)</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3 : APERÇU MOBILE LIVE DU COCKPIT -->
+    <section>
+      <h2>Aperçu Réel du Cockpit dans cette Charte</h2>
+      <p style="color: var(--text-secondary); margin-bottom: 24px;">
+        Voici comment ces couleurs se matérialisent directement dans le composant central de l'application sur smartphone :
+      </p>
+
+      <div class="ui-mockup-wrapper">
+        <div class="mobile-frame">
+          <div class="notch"></div>
+          
+          <div style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 1.5px; font-weight: 600;">AUJOURD'HUI</div>
+          <div style="font-size: 14px; color: var(--accent); font-weight: 600; margin-top: 2px;">2h 45m de Deep Work</div>
+          
+          <div class="phone-ring">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="5" y="2" width="14" height="20" rx="3"></rect>
+              <line x1="12" y1="18" x2="12.01" y2="18"></line>
+            </svg>
+            <div style="font-size: 10px; font-weight: 700; color: var(--text-primary); margin-top: 6px; text-transform: uppercase; letter-spacing: 0.5px;">RETOURNEZ</div>
+            <div style="font-size: 8px; color: var(--text-secondary);">POUR FOCUS</div>
+          </div>
+
+          <div class="phone-timer">45:00</div>
+
+          <div style="display: flex; gap: 8px; justify-content: center; margin-top: 10px;">
+            <span style="font-size: 11px; padding: 4px 10px; border-radius: 8px; background: var(--surface-color); border: 1px solid var(--border-color); color: var(--text-secondary);">Libre</span>
+            <span style="font-size: 11px; padding: 4px 10px; border-radius: 8px; background: var(--accent); color: #000; font-weight: 700;">25 min</span>
+            <span style="font-size: 11px; padding: 4px 10px; border-radius: 8px; background: var(--surface-color); border: 1px solid var(--border-color); color: var(--text-secondary);">45 min</span>
+          </div>
+
+          <button class="phone-btn">Mode Ne Pas Déranger : ACTIF</button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    function setTheme(themeName, btnElement) {
+      // Retirer la classe active de tous les boutons
+      document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('active'));
+      btnElement.classList.add('active');
+
+      const body = document.documentElement;
+
+      if (themeName === 'monochrome') {
+        body.setAttribute('data-theme', 'monochrome');
+        document.getElementById('hex-bg').innerText = '#050505';
+        document.getElementById('hex-surface').innerText = '#161616';
+        document.getElementById('hex-accent').innerText = '#E5E5EA';
+        document.getElementById('hex-text').innerText = '#FFFFFF';
+        document.getElementById('hex-danger').innerText = '#C0C0C0';
+      } else if (themeName === 'amber') {
+        body.setAttribute('data-theme', 'amber');
+        document.getElementById('hex-bg').innerText = '#0C0A09';
+        document.getElementById('hex-surface').innerText = '#1C1917';
+        document.getElementById('hex-accent').innerText = '#D97706';
+        document.getElementById('hex-text').innerText = '#F5F5F4';
+        document.getElementById('hex-danger').innerText = '#EF4444';
+      } else {
+        body.removeAttribute('data-theme');
+        document.getElementById('hex-bg').innerText = '#000000';
+        document.getElementById('hex-surface').innerText = '#121214';
+        document.getElementById('hex-accent').innerText = '#8FA89B';
+        document.getElementById('hex-text').innerText = '#F5F5F7';
+        document.getElementById('hex-danger').innerText = '#E26D5C';
+      }
+    }
+  </script>
+</body>
+</html>
