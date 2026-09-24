@@ -1,0 +1,21 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fond Squircle Android Material You -->
+  <rect width="512" height="512" rx="128" fill="#121214"/>
+  <rect x="4" y="4" width="504" height="504" rx="124" stroke="#26262A" stroke-width="8"/>
+  
+  <!-- Anneau de rayonnement d'énergie zen -->
+  <circle cx="256" cy="256" r="180" stroke="#8FA89B" stroke-width="3" stroke-dasharray="16 16" opacity="0.25"/>
+
+  <!-- Smartphone en bascule physique -->
+  <g transform="translate(196, 136)">
+    <!-- Corps du téléphone -->
+    <rect x="0" y="0" width="120" height="200" rx="28" stroke="#8FA89B" stroke-width="12" fill="#000000"/>
+    <!-- Écouteur -->
+    <line x1="38" y1="24" x2="82" y2="24" stroke="#8FA89B" stroke-width="8" stroke-linecap="round"/>
+    <!-- Capteur bas -->
+    <circle cx="60" cy="164" r="8" fill="#8FA89B"/>
+    <!-- Onde haptique droite -->
+    <path d="M148 50C178 80 178 120 148 150" stroke="#8FA89B" stroke-width="12" stroke-linecap="round" opacity="0.8"/>
+    <path d="M182 25C226 65 226 135 182 175" stroke="#8FA89B" stroke-width="10" stroke-linecap="round" opacity="0.35"/>
+  </g>
+</svg>
