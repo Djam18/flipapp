@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flip_to_focus/features/focus_session/presentation/blackout_screen.dart';
 import 'package:flip_to_focus/features/focus_session/presentation/focus_session_controller.dart';
 
+import 'package:flip_to_focus/l10n/app_localizations.dart';
+
 void main() {
   testWidgets('BlackoutScreen renders OLED blackout screen with elapsed counter', (tester) async {
     final container = ProviderContainer();
@@ -14,6 +16,8 @@ void main() {
       UncontrolledProviderScope(
         container: container,
         child: const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: BlackoutScreen(),
         ),
       ),

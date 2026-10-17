@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flip_to_focus/features/focus_session/presentation/session_summary_screen.dart';
+import 'package:flip_to_focus/l10n/app_localizations.dart';
 
 void main() {
   testWidgets('SessionSummaryScreen displays correct metrics, intention, and action buttons', (tester) async {
     await tester.pumpWidget(
       const ProviderScope(
         child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: SessionSummaryScreen(
             durationMinutes: 25,
             intentionTag: '#code',

@@ -404,7 +404,7 @@ class AnalyticsScreen extends ConsumerWidget {
                   );
                 },
                 child: Text(
-                  'VIEW ALL',
+                  AppLocalizations.of(context)!.viewAll,
                   style: AppTypography.caption.copyWith(
                     color: AppColors.accent,
                     fontWeight: FontWeight.w700,

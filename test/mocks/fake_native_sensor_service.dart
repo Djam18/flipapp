@@ -43,6 +43,31 @@ class FakeNativeSensorService extends NativeSensorService {
   @override
   Future<void> requestDndPermission() async {}
 
+  int pauseNotificationCount = 0;
+  int cancelNotificationCount = 0;
+
+  @override
+  Future<void> showPauseNotification({required String title, required String message}) async {
+    pauseNotificationCount++;
+  }
+
+  @override
+  Future<void> schedulePauseReminder({
+    int firstReminderSeconds = 60,
+    required String reminderTitle,
+    required String reminderMessage,
+    int expireSeconds = 120,
+    required String expireTitle,
+    required String expireMessage,
+  }) async {
+    pauseNotificationCount++;
+  }
+
+  @override
+  Future<void> cancelNotifications() async {
+    cancelNotificationCount++;
+  }
+
   void dispose() {
     _controller.close();
   }

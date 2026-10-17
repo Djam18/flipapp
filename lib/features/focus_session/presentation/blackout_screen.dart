@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../l10n/app_localizations.dart';
 import '../domain/focus_session_state.dart';
 import 'focus_session_controller.dart';
 
@@ -106,7 +107,7 @@ class _BlackoutScreenState extends ConsumerState<BlackoutScreen>
               ),
               const SizedBox(height: 8),
               Text(
-                'RESTING FACE DOWN',
+                AppLocalizations.of(context)!.restingFaceDown,
                 style: AppTypography.caption.copyWith(
                   color: Colors.white10,
                   letterSpacing: 2,

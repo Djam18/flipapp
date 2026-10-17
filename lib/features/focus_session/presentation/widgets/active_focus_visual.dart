@@ -12,7 +12,8 @@ class ActiveFocusVisual extends StatelessWidget {
   final int? targetMinutes;
   final int focusScore;
   final int distractionCount;
-  final VoidCallback onCoffeeBreak;
+  final VoidCallback? onCoffeeBreak;
+  final VoidCallback? onHistory;
   final VoidCallback onPauseOrStop;
   final VoidCallback onOpenSettings;
   final VoidCallback? onTapGauge;
@@ -23,7 +24,8 @@ class ActiveFocusVisual extends StatelessWidget {
     required this.targetMinutes,
     this.focusScore = 88,
     this.distractionCount = 0,
-    required this.onCoffeeBreak,
+    this.onCoffeeBreak,
+    this.onHistory,
     required this.onPauseOrStop,
     required this.onOpenSettings,
     this.onTapGauge,
@@ -60,25 +62,28 @@ class ActiveFocusVisual extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
+        const SizedBox(height: AppSpacing.md),
         // Subtitle & Title header
         Text(
           l10n.deepWork,
           style: AppTypography.titleLarge.copyWith(
-            letterSpacing: 2.0,
-            fontWeight: FontWeight.w700,
+            letterSpacing: 1.0,
+            fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,
+            fontSize: 22,
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 6),
         Text(
           l10n.deepWorkSession,
           style: AppTypography.caption.copyWith(
             color: AppColors.textSecondary,
-            letterSpacing: 1.2,
+            letterSpacing: 0.5,
+            fontSize: 14,
           ),
         ),
 
-        const SizedBox(height: AppSpacing.xl),
+        const SizedBox(height: 48),
 
         // Circular Gauge with 25:00 Timer
         GestureDetector(
@@ -91,47 +96,26 @@ class ActiveFocusVisual extends StatelessWidget {
                 height: 220,
                 child: CircularProgressIndicator(
                   value: progress,
-                  strokeWidth: 4.0,
-                  backgroundColor: AppColors.border,
+                  strokeWidth: 12.0,
+                  strokeCap: StrokeCap.round,
+                  backgroundColor: const Color(0xFF26262A),
                   valueColor: const AlwaysStoppedAnimation<Color>(AppColors.accent),
                 ),
               ),
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    timeStr,
-                    style: GoogleFonts.jetBrainsMono(
-                      fontSize: 44,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                      letterSpacing: 1.5,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppColors.accent.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      l10n.active,
-                      style: AppTypography.caption.copyWith(
-                        color: AppColors.accent,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                  ),
-                ],
+              Text(
+                timeStr,
+                style: GoogleFonts.jetBrainsMono(
+                  fontSize: 46,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textPrimary,
+                  letterSpacing: -0.5,
+                ),
               ),
             ],
           ),
         ),
 
-        const SizedBox(height: AppSpacing.xl),
+        const SizedBox(height: 40),
 
         // Dual Metric Cards: [Focus Score: 88] [Distractions: 0]
         Row(
@@ -140,52 +124,40 @@ class ActiveFocusVisual extends StatelessWidget {
             _buildMetricCard(
               title: l10n.focusScore,
               value: '$focusScore',
-              icon: Icons.speed_rounded,
-              accentColor: AppColors.accent,
             ),
             const SizedBox(width: AppSpacing.md),
             _buildMetricCard(
               title: l10n.distractions,
               value: '$distractionCount',
-              icon: Icons.shield_outlined,
-              accentColor: AppColors.textSecondary,
             ),
           ],
         ),
 
-        const SizedBox(height: AppSpacing.xl),
+        const SizedBox(height: 48),
 
-        // 3-Button Control Bar: [☕] [⏸] [⚙]
+        // 3-Button Control Bar: [Inbox / History] [Pause] [Settings]
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _buildCircleButton(
-              icon: Icons.coffee_rounded,
-              tooltip: 'Coffee Break',
-              onPressed: onCoffeeBreak,
-              color: AppColors.surface,
-              iconColor: AppColors.accentAmber,
+            _buildSecondaryButton(
+              icon: Icons.all_inbox_outlined,
+              tooltip: 'Session Logs',
+              onPressed: onHistory ?? onCoffeeBreak ?? () {},
             ),
-            const SizedBox(width: AppSpacing.lg),
-            _buildCircleButton(
-              icon: Icons.pause_rounded,
-              tooltip: 'Pause / Complete',
+            const SizedBox(width: 32),
+            _buildPauseButton(
+              tooltip: 'Pause / Stop',
               onPressed: onPauseOrStop,
-              color: AppColors.accent,
-              iconColor: AppColors.background,
-              size: 60,
-              iconSize: 32,
             ),
-            const SizedBox(width: AppSpacing.lg),
-            _buildCircleButton(
+            const SizedBox(width: 32),
+            _buildSecondaryButton(
               icon: Icons.settings_outlined,
               tooltip: 'Settings',
               onPressed: onOpenSettings,
-              color: AppColors.surface,
-              iconColor: AppColors.textSecondary,
             ),
           ],
         ),
+        const SizedBox(height: AppSpacing.lg),
       ],
     );
   }
@@ -193,42 +165,33 @@ class ActiveFocusVisual extends StatelessWidget {
   Widget _buildMetricCard({
     required String title,
     required String value,
-    required IconData icon,
-    required Color accentColor,
   }) {
     return Container(
       width: 140,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Row(
-            children: [
-              Icon(icon, size: 14, color: accentColor),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  title,
-                  style: AppTypography.caption.copyWith(
-                    color: AppColors.textSecondary,
-                    fontSize: 11,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
+          Text(
+            title,
+            style: AppTypography.caption.copyWith(
+              color: AppColors.textSecondary,
+              fontSize: 13,
+              fontWeight: FontWeight.w400,
+            ),
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 6),
           Text(
             value,
             style: GoogleFonts.jetBrainsMono(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
+              fontSize: 28,
+              fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
             ),
           ),
@@ -237,34 +200,57 @@ class ActiveFocusVisual extends StatelessWidget {
     );
   }
 
-  Widget _buildCircleButton({
-    required IconData icon,
+  Widget _buildPauseButton({
     required String tooltip,
     required VoidCallback onPressed,
-    required Color color,
-    required Color iconColor,
-    double size = 48,
-    double iconSize = 22,
   }) {
     return InkWell(
       onTap: onPressed,
-      borderRadius: BorderRadius.circular(size / 2),
+      borderRadius: BorderRadius.circular(32),
       child: Container(
-        width: size,
-        height: size,
+        width: 62,
+        height: 62,
         decoration: BoxDecoration(
-          color: color,
+          color: AppColors.accent,
           shape: BoxShape.circle,
-          border: Border.all(color: AppColors.border),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.3),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
+              color: AppColors.accent.withValues(alpha: 0.25),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
-        child: Icon(icon, color: iconColor, size: iconSize),
+        child: const Icon(
+          Icons.pause_rounded,
+          color: Colors.white,
+          size: 30,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSecondaryButton({
+    required IconData icon,
+    required String tooltip,
+    required VoidCallback onPressed,
+  }) {
+    return InkWell(
+      onTap: onPressed,
+      borderRadius: BorderRadius.circular(24),
+      child: Container(
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          shape: BoxShape.circle,
+          border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
+        ),
+        child: Icon(
+          icon,
+          color: AppColors.textSecondary,
+          size: 22,
+        ),
       ),
     );
   }

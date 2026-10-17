@@ -6,6 +6,7 @@ import '../../../core/platform/native_sensor_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// Interactive hardware calibration and practice screen.
 /// Allows the user to physically flip their phone to test accelerometer and proximity sensor integration.
@@ -163,7 +164,11 @@ class _InteractiveFlipTestScreenState extends ConsumerState<InteractiveFlipTestS
                 ),
                 onPressed: () => _handleFlipUpdate(!_isFlipped),
                 icon: Icon(_isFlipped ? Icons.screen_rotation_rounded : Icons.flip_to_back_rounded, size: 18),
-                label: Text(_isFlipped ? 'Simulate Flip Up' : 'Simulate Flip Down'),
+                label: Text(
+                  _isFlipped
+                      ? AppLocalizations.of(context)!.simulateFlipUp
+                      : AppLocalizations.of(context)!.simulateFlipDown,
+                ),
               ),
               const SizedBox(height: AppSpacing.lg),
             ],

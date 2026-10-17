@@ -46,3 +46,9 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+docs/Voic*.md
+docs/No*.md
+docs/FIC*.md
+docs/Tou*.md
+docs/screensh*/Screen*.png

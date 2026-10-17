@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/platform/native_sensor_service.dart';
 import '../../analytics/presentation/analytics_controller.dart';
@@ -15,13 +16,18 @@ class FocusSessionNotifier extends Notifier<FocusSessionState> {
   Timer? _sessionTimer;
   Timer? _graceTimer;
   Timer? _armingTimer;
+  Timer? _pauseTimer;
+  DateTime? _pauseExpiresAt;
   StreamSubscription<bool>? _sensorSubscription;
 
-  NativeSensorService get _sensorService => ref.read(nativeSensorServiceProvider);
-  FocusSessionRepository get _repository => ref.read(focusSessionRepositoryProvider);
+  late NativeSensorService _sensorService;
+  late FocusSessionRepository _repository;
 
   @override
   FocusSessionState build() {
+    _sensorService = ref.read(nativeSensorServiceProvider);
+    _repository = ref.read(focusSessionRepositoryProvider);
+
     // Listen to real-time events from the Android native Platform Channel
     _listenToSensors();
 
@@ -30,7 +36,9 @@ class FocusSessionNotifier extends Notifier<FocusSessionState> {
       _sessionTimer?.cancel();
       _graceTimer?.cancel();
       _armingTimer?.cancel();
+      _pauseTimer?.cancel();
       _sensorSubscription?.cancel();
+      _sensorService.cancelNotifications();
     });
 
     return FocusSessionState.initial();
@@ -78,10 +86,14 @@ class FocusSessionNotifier extends Notifier<FocusSessionState> {
         state.status == SessionStatus.paused) {
       // Phone put back down before countdown expires: session saved!
       _graceTimer?.cancel();
+      _pauseTimer?.cancel();
+      _pauseExpiresAt = null;
+      _sensorService.cancelNotifications();
       _sensorService.triggerHapticFeedback();
       state = state.copyWith(
         status: SessionStatus.focusing,
         remainingGraceSeconds: 10,
+        remainingPauseSeconds: 120,
       );
       _resumeSessionTimer();
     }
@@ -187,12 +199,77 @@ class FocusSessionNotifier extends Notifier<FocusSessionState> {
   void pauseEmergency() {
     if (state.status == SessionStatus.gracePeriod) {
       _graceTimer?.cancel();
+      _pauseTimer?.cancel();
       _sensorService.triggerHapticFeedback();
+
+      _pauseExpiresAt = DateTime.now().add(const Duration(seconds: 120));
+
+      // Schedule native background notifications for immediate status, 60s reminder, and 120s timeout
+      _sensorService.showPauseNotification(
+        title: 'Pause d\'urgence active (2:00)',
+        message: 'Placez votre téléphone face contre table pour reprendre votre session.',
+      );
+
+      _sensorService.schedulePauseReminder(
+        firstReminderSeconds: 60,
+        reminderTitle: 'Plus qu\'une minute de pause !',
+        reminderMessage: 'Reprenez votre session de Deep Work avant que le temps ne soit écoulé.',
+        expireSeconds: 120,
+        expireTitle: 'Pause de 2 minutes expirée',
+        expireMessage: 'Votre session a été interrompue et sauvegardée.',
+      );
+
       state = state.copyWith(
         status: SessionStatus.paused,
         pauseCount: state.pauseCount + 1,
         remainingPauseSeconds: 120,
       );
+
+      _startPauseCountdown();
+    }
+  }
+
+  void _startPauseCountdown() {
+    _pauseTimer?.cancel();
+    _pauseTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_pauseExpiresAt == null) {
+        timer.cancel();
+        return;
+      }
+
+      final remaining = _pauseExpiresAt!.difference(DateTime.now()).inSeconds;
+      if (remaining > 0) {
+        state = state.copyWith(remainingPauseSeconds: remaining);
+      } else {
+        timer.cancel();
+        _expirePauseSession();
+      }
+    });
+  }
+
+  void _expirePauseSession() {
+    _pauseTimer?.cancel();
+    _pauseExpiresAt = null;
+    _sensorService.setDndEnabled(false);
+    _sensorService.cancelNotifications();
+    _persistSession(status: 'interrupted', elapsed: state.elapsedSeconds);
+    state = state.copyWith(
+      status: SessionStatus.interrupted,
+      remainingPauseSeconds: 0,
+    );
+  }
+
+  /// Synchronizes elapsed time when returning from out-of-app background
+  void syncLifecycle(AppLifecycleState lifecycle) {
+    if (lifecycle == AppLifecycleState.resumed &&
+        state.status == SessionStatus.paused &&
+        _pauseExpiresAt != null) {
+      final remaining = _pauseExpiresAt!.difference(DateTime.now()).inSeconds;
+      if (remaining <= 0) {
+        _expirePauseSession();
+      } else {
+        state = state.copyWith(remainingPauseSeconds: remaining);
+      }
     }
   }
 
@@ -200,6 +277,9 @@ class FocusSessionNotifier extends Notifier<FocusSessionState> {
   void abandonSession() {
     _sessionTimer?.cancel();
     _graceTimer?.cancel();
+    _pauseTimer?.cancel();
+    _pauseExpiresAt = null;
+    _sensorService.cancelNotifications();
     _sensorService.setDndEnabled(false);
     _persistSession(status: 'interrupted', elapsed: state.elapsedSeconds);
     state = state.copyWith(status: SessionStatus.interrupted);
@@ -210,6 +290,9 @@ class FocusSessionNotifier extends Notifier<FocusSessionState> {
     _sessionTimer?.cancel();
     _graceTimer?.cancel();
     _armingTimer?.cancel();
+    _pauseTimer?.cancel();
+    _pauseExpiresAt = null;
+    _sensorService.cancelNotifications();
     _sensorService.setDndEnabled(false);
     state = FocusSessionState.initial();
   }

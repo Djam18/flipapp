@@ -38,26 +38,24 @@ class _SessionSummaryScreenState extends ConsumerState<SessionSummaryScreen> {
     super.dispose();
   }
 
-  void _shareSummary() {
-    final tag = widget.intentionTag ?? 'deep work';
+  void _shareSummary(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final tag = widget.intentionTag ?? l10n.intentionDefault;
     final text = 'Forged ${widget.durationMinutes} min of pure focus on $tag. #FlipToFocus';
     Clipboard.setData(ClipboardData(text: text));
     setState(() => _copied = true);
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Summary copied to clipboard'),
+      SnackBar(
+        content: Text(l10n.summaryCopied),
         backgroundColor: AppColors.surfaceElevated,
-        duration: Duration(seconds: 2),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final summaryTitle = l10n?.summary ?? 'Summary';
-    final sessionCompleteTitle = l10n?.sessionComplete ?? 'Session Complete';
-    final breaksText = l10n?.breaks ?? 'breaks';
+    final l10n = AppLocalizations.of(context)!;
     final analytics = ref.watch(analyticsProvider).asData?.value;
     final currentStreak = analytics?.currentStreakDays ?? 1;
 
@@ -74,7 +72,7 @@ class _SessionSummaryScreenState extends ConsumerState<SessionSummaryScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    summaryTitle,
+                    l10n.summary,
                     style: AppTypography.titleLarge.copyWith(
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1.5,
@@ -88,7 +86,7 @@ class _SessionSummaryScreenState extends ConsumerState<SessionSummaryScreen> {
                         context: context,
                         builder: (_) => AlertDialog(
                           backgroundColor: AppColors.surfaceElevated,
-                          title: Text(summaryTitle, style: const TextStyle(color: AppColors.textPrimary)),
+                          title: Text(l10n.summary, style: const TextStyle(color: AppColors.textPrimary)),
                           content: const Text(
                             'Session completed. Your focus minutes are forged locally and tracked on your calendar.',
                             style: TextStyle(color: AppColors.textSecondary),
@@ -125,7 +123,7 @@ class _SessionSummaryScreenState extends ConsumerState<SessionSummaryScreen> {
                       ),
                     ),
                     child: Text(
-                      widget.isCompleted ? 'SESSION FORGED' : 'PARTIAL FOCUS SAVED',
+                      widget.isCompleted ? l10n.sessionForged : l10n.partialFocusSaved,
                       style: AppTypography.caption.copyWith(
                         color: widget.isCompleted ? AppColors.accent : AppColors.accentAmber,
                         fontWeight: FontWeight.w700,
@@ -135,7 +133,7 @@ class _SessionSummaryScreenState extends ConsumerState<SessionSummaryScreen> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    sessionCompleteTitle,
+                    l10n.sessionComplete,
                     style: AppTypography.caption.copyWith(
                       color: AppColors.textSecondary,
                       fontWeight: FontWeight.w600,
@@ -196,7 +194,7 @@ class _SessionSummaryScreenState extends ConsumerState<SessionSummaryScreen> {
 
               const SizedBox(height: AppSpacing.xs),
               Text(
-                'MINUTES DEEP WORK',
+                l10n.minutesDeepWork,
                 style: AppTypography.caption.copyWith(
                   letterSpacing: 2,
                   color: AppColors.textSecondary,
@@ -210,13 +208,13 @@ class _SessionSummaryScreenState extends ConsumerState<SessionSummaryScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   _buildSummaryPill(
-                    title: '${widget.durationMinutes}m Focus',
+                    title: '${widget.durationMinutes}m ${l10n.focusScore}',
                     icon: Icons.timer_outlined,
                     color: AppColors.accent,
                   ),
                   const SizedBox(width: AppSpacing.md),
                   _buildSummaryPill(
-                    title: '2 $breaksText',
+                    title: '2 ${l10n.breaks}',
                     icon: Icons.coffee_rounded,
                     color: AppColors.accentAmber,
                   ),
@@ -236,11 +234,11 @@ class _SessionSummaryScreenState extends ConsumerState<SessionSummaryScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _buildMetricColumn('INTENTION', widget.intentionTag ?? '#code'),
+                    _buildMetricColumn(l10n.intention, widget.intentionTag ?? l10n.intentionDefault),
                     Container(height: 30, width: 1, color: AppColors.border),
-                    _buildMetricColumn('STREAK', '$currentStreak DAYS'),
+                    _buildMetricColumn(l10n.streak, '$currentStreak ${l10n.days}'),
                     Container(height: 30, width: 1, color: AppColors.border),
-                    _buildMetricColumn('DISTRACTIONS', '0 (SHIELDED)'),
+                    _buildMetricColumn(l10n.distractions, '0 (${l10n.shielded})'),
                   ],
                 ),
               ),
@@ -256,7 +254,7 @@ class _SessionSummaryScreenState extends ConsumerState<SessionSummaryScreen> {
               Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'REFLECTION & OUTPUT',
+                  l10n.reflectionOutput,
                   style: AppTypography.caption.copyWith(
                     letterSpacing: 1.5,
                     color: AppColors.textSecondary,
@@ -270,7 +268,7 @@ class _SessionSummaryScreenState extends ConsumerState<SessionSummaryScreen> {
                 style: AppTypography.bodyRegular.copyWith(color: AppColors.textPrimary),
                 maxLines: 2,
                 decoration: InputDecoration(
-                  hintText: 'What key milestone or concept did you ship?',
+                  hintText: l10n.reflectionHint,
                   hintStyle: AppTypography.bodyRegular.copyWith(color: AppColors.textSecondary.withValues(alpha: 0.6)),
                   filled: true,
                   fillColor: AppColors.surface,
@@ -299,9 +297,9 @@ class _SessionSummaryScreenState extends ConsumerState<SessionSummaryScreen> {
                         borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
                       ),
                     ),
-                    onPressed: _shareSummary,
+                    onPressed: () => _shareSummary(context),
                     icon: Icon(_copied ? Icons.check : Icons.share_outlined, size: 18),
-                    label: Text(_copied ? 'Copied' : 'Share'),
+                    label: Text(_copied ? l10n.copied : l10n.share),
                   ),
                   const SizedBox(width: AppSpacing.md),
                   Expanded(
@@ -319,7 +317,7 @@ class _SessionSummaryScreenState extends ConsumerState<SessionSummaryScreen> {
                         Navigator.of(context).pop();
                       },
                       child: Text(
-                        'RETURN TO COCKPIT',
+                        l10n.returnToCockpit,
                         style: AppTypography.button.copyWith(color: AppColors.background),
                       ),
                     ),

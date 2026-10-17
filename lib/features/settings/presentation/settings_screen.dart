@@ -84,7 +84,7 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: AppSpacing.xs),
                   Text(
-                    'Time allowed to pick up your phone to check emergency info before the deep work session is marked interrupted.',
+                    l10n.gracePeriodSubtitle,
                     style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
                   ),
                   const SizedBox(height: AppSpacing.md),
@@ -152,7 +152,7 @@ class SettingsScreen extends ConsumerWidget {
                         ),
                       ),
                       subtitle: Text(
-                        'Mute notifications and calls while phone is flipped down',
+                        l10n.autoDndSubtitle,
                         style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
                       ),
                       value: settings.autoDndEnabled,
@@ -169,7 +169,7 @@ class SettingsScreen extends ConsumerWidget {
                         ),
                       ),
                       subtitle: Text(
-                        'Gentle vibrations on flip confirmation, grace alert, and session success',
+                        l10n.hapticSubtitle,
                         style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
                       ),
                       value: settings.hapticsEnabled,
@@ -186,7 +186,7 @@ class SettingsScreen extends ConsumerWidget {
                         ),
                       ),
                       subtitle: Text(
-                        'Deactivate display pixels completely to preserve battery',
+                        l10n.oledSubtitle,
                         style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
                       ),
                       value: settings.screenOffSimulation,
@@ -197,14 +197,14 @@ class SettingsScreen extends ConsumerWidget {
                     ListTile(
                       leading: const Icon(Icons.flip_to_back_rounded, color: AppColors.accent, size: 22),
                       title: Text(
-                        'Hardware Calibration & Practice',
+                        l10n.hardwareCalibration,
                         style: AppTypography.bodyRegular.copyWith(
                           color: AppColors.textPrimary,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                       subtitle: Text(
-                        'Test flip detection, proximity sensor, and haptics in real-time',
+                        l10n.hardwareCalibrationSubtitle,
                         style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
                       ),
                       trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.textSecondary),
@@ -245,7 +245,7 @@ class SettingsScreen extends ConsumerWidget {
                           ),
                         ),
                         Text(
-                          'Open Android settings to grant or check permission',
+                          l10n.dndSubtitle,
                           style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
                         ),
                       ],
@@ -285,7 +285,7 @@ class SettingsScreen extends ConsumerWidget {
                         ),
                       ),
                       subtitle: Text(
-                        'Deep Work principles, open source licenses, and privacy pledge',
+                        l10n.manifestoSubtitle,
                         style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
                       ),
                       trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.textSecondary),
@@ -305,7 +305,7 @@ class SettingsScreen extends ConsumerWidget {
                         ),
                       ),
                       subtitle: Text(
-                        'Irreversibly delete all sessions, heatmap records, and streaks',
+                        l10n.wipeDataSubtitle,
                         style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
                       ),
                       trailing: const Icon(Icons.delete_outline_rounded, color: AppColors.danger, size: 20),
@@ -337,21 +337,22 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   void _showWipeConfirmation(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.surface,
         title: Text(
-          'Delete All Data?',
+          l10n.wipeDialogTitle,
           style: AppTypography.titleMedium.copyWith(color: AppColors.textPrimary),
         ),
         content: Text(
-          'This action cannot be undone. All deep work session history and daily streak metrics will be erased from your device.',
+          l10n.wipeDialogBody,
           style: AppTypography.bodyRegular.copyWith(color: AppColors.textSecondary),
         ),
         actions: [
           TextButton(
-            child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
+            child: Text(l10n.cancel, style: const TextStyle(color: AppColors.textSecondary)),
             onPressed: () => Navigator.of(ctx).pop(),
           ),
           ElevatedButton(
@@ -359,15 +360,15 @@ class SettingsScreen extends ConsumerWidget {
               backgroundColor: AppColors.danger,
               foregroundColor: AppColors.textPrimary,
             ),
-            child: const Text('Wipe Everything'),
+            child: Text(l10n.wipeEverything),
             onPressed: () async {
               await ref.read(settingsProvider.notifier).resetAllData();
               ref.invalidate(analyticsProvider);
               if (ctx.mounted) {
                 Navigator.of(ctx).pop();
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('All local session data has been erased.'),
+                  SnackBar(
+                    content: Text(l10n.dataErased),
                     backgroundColor: AppColors.surfaceElevated,
                   ),
                 );

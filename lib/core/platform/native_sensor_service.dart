@@ -13,6 +13,8 @@ class NativeSensorService {
       MethodChannel('com.fliptofocus.app/dnd');
   static const MethodChannel _vibrationChannel =
       MethodChannel('com.fliptofocus.app/vibration');
+  static const MethodChannel _notificationChannel =
+      MethodChannel('com.fliptofocus.app/notifications');
 
   /// Continuous stream emitting `true` when phone rests face-down on a desk,
   /// and `false` when lifted.
@@ -82,5 +84,46 @@ class NativeSensorService {
     } catch (_) {
       HapticFeedback.heavyImpact();
     }
+  }
+
+  /// Displays an immediate notification when user enters emergency pause
+  Future<void> showPauseNotification({
+    required String title,
+    required String message,
+  }) async {
+    try {
+      await _notificationChannel.invokeMethod('showPauseNotification', {
+        'title': title,
+        'message': message,
+      });
+    } catch (_) {}
+  }
+
+  /// Schedules native background reminders for 60s warning and 120s expiration
+  Future<void> schedulePauseReminder({
+    int firstReminderSeconds = 60,
+    required String reminderTitle,
+    required String reminderMessage,
+    int expireSeconds = 120,
+    required String expireTitle,
+    required String expireMessage,
+  }) async {
+    try {
+      await _notificationChannel.invokeMethod('schedulePauseReminder', {
+        'firstReminderSeconds': firstReminderSeconds,
+        'reminderTitle': reminderTitle,
+        'reminderMessage': reminderMessage,
+        'expireSeconds': expireSeconds,
+        'expireTitle': expireTitle,
+        'expireMessage': expireMessage,
+      });
+    } catch (_) {}
+  }
+
+  /// Cancels all active and scheduled pause notifications
+  Future<void> cancelNotifications() async {
+    try {
+      await _notificationChannel.invokeMethod('cancelNotifications');
+    } catch (_) {}
   }
 }

@@ -6,6 +6,7 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../focus_session/presentation/cockpit_screen.dart';
 import '../../settings/presentation/settings_controller.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// Interactive onboarding flow explaining the physical flip paradigm and requesting DND permission.
 class OnboardingScreen extends ConsumerStatefulWidget {
@@ -28,6 +29,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final sensorService = ref.read(nativeSensorServiceProvider);
 
     return Scaffold(
@@ -41,7 +43,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               child: TextButton(
                 onPressed: _finishOnboarding,
                 child: Text(
-                  'SKIP',
+                  l10n.onboardingSkip,
                   style: AppTypography.caption.copyWith(
                     color: AppColors.textSecondary,
                     letterSpacing: 1.5,
@@ -58,21 +60,18 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 children: [
                   _buildSlide(
                     icon: Icons.stay_current_portrait_rounded,
-                    title: 'THE PHYSICAL GESTURE',
-                    subtitle:
-                        'Turn your phone completely face-down on your desk. Deep work begins with a physical commitment, not a virtual tap.',
+                    title: l10n.onboardingSlide1Title,
+                    subtitle: l10n.onboardingSlide1Body,
                   ),
                   _buildSlide(
                     icon: Icons.sensors_rounded,
-                    title: 'HARDWARE PRECISION',
-                    subtitle:
-                        'Gravity and proximity sensors guard your focus. If you pick up your phone, a 10-second grace countdown gives you time to put it back.',
+                    title: l10n.onboardingSlide2Title,
+                    subtitle: l10n.onboardingSlide2Body,
                   ),
                   _buildSlide(
                     icon: Icons.do_not_disturb_on_rounded,
-                    title: 'DISTRACTION SHIELD',
-                    subtitle:
-                        'Grant Android Do Not Disturb permission so the app can automatically mute incoming calls and alerts while your phone is face down.',
+                    title: l10n.onboardingSlide3Title,
+                    subtitle: l10n.onboardingSlide3Body,
                     actionButton: OutlinedButton.icon(
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.accent,
@@ -83,7 +82,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 12),
                       ),
                       icon: const Icon(Icons.security_rounded, size: 18),
-                      label: const Text('Grant DND Permission'),
+                      label: Text(l10n.onboardingGrantDnd),
                       onPressed: () => sensorService.requestDndPermission(),
                     ),
                   ),
@@ -135,7 +134,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       }
                     },
                     child: Text(
-                      _currentPage == 2 ? 'ENTER COCKPIT' : 'NEXT',
+                      _currentPage == 2 ? l10n.onboardingEnterCockpit : l10n.onboardingNext,
                       style: AppTypography.button.copyWith(
                         color: AppColors.background,
                         fontWeight: FontWeight.w700,

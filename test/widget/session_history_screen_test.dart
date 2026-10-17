@@ -5,6 +5,7 @@ import 'package:flip_to_focus/features/analytics/presentation/session_history_sc
 import 'package:flip_to_focus/features/analytics/presentation/analytics_controller.dart';
 import 'package:flip_to_focus/features/analytics/domain/analytics_data.dart';
 import 'package:flip_to_focus/features/focus_session/domain/focus_session_record.dart';
+import 'package:flip_to_focus/l10n/app_localizations.dart';
 
 class MockAnalyticsNotifier extends AnalyticsNotifier {
   @override
@@ -50,6 +51,8 @@ void main() {
           analyticsProvider.overrideWith(() => MockAnalyticsNotifier()),
         ],
         child: const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: SessionHistoryScreen(),
         ),
       ),

@@ -5,6 +5,7 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../analytics/presentation/analytics_controller.dart';
 import '../../analytics/presentation/analytics_screen.dart';
+import '../../analytics/presentation/session_history_screen.dart';
 import '../../settings/presentation/settings_screen.dart';
 import '../domain/focus_session_state.dart';
 import 'blackout_screen.dart';
@@ -15,11 +16,34 @@ import 'widgets/standby_veille_visual.dart';
 import '../../../l10n/app_localizations.dart';
 
 /// Primary "Cockpit" screen for Flip to Focus.
-class CockpitScreen extends ConsumerWidget {
+class CockpitScreen extends ConsumerStatefulWidget {
   const CockpitScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CockpitScreen> createState() => _CockpitScreenState();
+}
+
+class _CockpitScreenState extends ConsumerState<CockpitScreen>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    ref.read(focusSessionProvider.notifier).syncLifecycle(state);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final sessionState = ref.watch(focusSessionProvider);
     final controller = ref.read(focusSessionProvider.notifier);
 
@@ -45,9 +69,9 @@ class CockpitScreen extends ConsumerWidget {
                     _buildDurationSelector(sessionState, controller),
                     const SizedBox(height: AppSpacing.md),
                     _buildIntentionSelector(context, sessionState, controller),
+                    const SizedBox(height: AppSpacing.md),
+                    _buildSimulationControls(controller, sessionState),
                   ],
-                  const SizedBox(height: AppSpacing.md),
-                  _buildSimulationControls(controller, sessionState),
                   const SizedBox(height: AppSpacing.sm),
                 ],
               ),
@@ -56,6 +80,10 @@ class CockpitScreen extends ConsumerWidget {
             // 10-Second Grace Alert Overlay (if phone picked up early)
             if (sessionState.status == SessionStatus.gracePeriod)
               _buildGracePeriodOverlay(context, sessionState, controller),
+
+            // 2-Minute Emergency Pause Overlay (Screen 5)
+            if (sessionState.status == SessionStatus.paused)
+              _buildPausedOverlay(context, sessionState, controller),
 
             // Celebration Overlay (Target completed)
             if (sessionState.status == SessionStatus.completed)
@@ -131,6 +159,11 @@ class CockpitScreen extends ConsumerWidget {
         onTapGauge: () {
           Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => const BlackoutScreen()),
+          );
+        },
+        onHistory: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const SessionHistoryScreen()),
           );
         },
         onCoffeeBreak: () {
@@ -288,6 +321,7 @@ class CockpitScreen extends ConsumerWidget {
     FocusSessionState state,
     FocusSessionNotifier controller,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
@@ -302,7 +336,7 @@ class CockpitScreen extends ConsumerWidget {
           const SizedBox(width: 8),
           Flexible(
             child: Text(
-              state.intentionTag ?? 'Set intention (e.g., Code)',
+              state.intentionTag ?? l10n.intentionPlaceholder,
               style: AppTypography.bodyRegular.copyWith(fontSize: 13),
               overflow: TextOverflow.ellipsis,
             ),
@@ -351,6 +385,7 @@ class CockpitScreen extends ConsumerWidget {
     FocusSessionState state,
     FocusSessionNotifier controller,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       color: AppColors.background.withValues(alpha: 0.95),
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -360,7 +395,7 @@ class CockpitScreen extends ConsumerWidget {
           const Icon(Icons.warning_amber_rounded, size: 64, color: AppColors.danger),
           const SizedBox(height: AppSpacing.md),
           Text(
-            'DO NOT BREAK YOUR STRIDE',
+            l10n.graceAlertTitle,
             style: AppTypography.titleMedium.copyWith(color: AppColors.danger),
             textAlign: TextAlign.center,
           ),
@@ -371,7 +406,7 @@ class CockpitScreen extends ConsumerWidget {
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            'Place screen face-down on desk\nto rescue the session',
+            l10n.gracePeriodInstruction,
             style: AppTypography.bodyRegular,
             textAlign: TextAlign.center,
           ),
@@ -387,13 +422,75 @@ class CockpitScreen extends ConsumerWidget {
               ),
             ),
             onPressed: () => controller.pauseEmergency(),
-            child: const Text('Emergency Pause (2 minutes)'),
+            child: Text(l10n.emergencyPause),
           ),
           const SizedBox(height: AppSpacing.sm),
           TextButton(
             onPressed: () => controller.abandonSession(),
             child: Text(
-              'Abandon session',
+              l10n.abandonSession,
+              style: AppTypography.caption.copyWith(color: AppColors.danger),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 2-Minute Emergency Pause Overlay (Screen 5)
+  Widget _buildPausedOverlay(
+    BuildContext context,
+    FocusSessionState state,
+    FocusSessionNotifier controller,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
+    final mins = state.remainingPauseSeconds ~/ 60;
+    final secs = state.remainingPauseSeconds % 60;
+    final pauseTimeStr =
+        '${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+
+    return Container(
+      color: AppColors.background.withValues(alpha: 0.96),
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.pause_circle_outline_rounded, size: 72, color: AppColors.accentAmber),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            l10n.emergencyPause,
+            style: AppTypography.titleMedium.copyWith(color: AppColors.accentAmber),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Text(
+            pauseTimeStr,
+            style: AppTypography.timerDisplay.copyWith(color: AppColors.accentAmber),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            l10n.gracePeriodInstruction,
+            style: AppTypography.bodyRegular,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.accentAmber,
+              foregroundColor: AppColors.background,
+              minimumSize: const Size(double.infinity, 50),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
+              ),
+            ),
+            onPressed: () => controller.onFlipDown(),
+            child: const Text('Resume Session (Flip Down)', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          TextButton(
+            onPressed: () => controller.abandonSession(),
+            child: Text(
+              l10n.abandonSession,
               style: AppTypography.caption.copyWith(color: AppColors.danger),
             ),
           ),
@@ -408,6 +505,7 @@ class CockpitScreen extends ConsumerWidget {
     FocusSessionState state,
     FocusSessionNotifier controller,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       color: AppColors.background.withValues(alpha: 0.98),
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -416,10 +514,10 @@ class CockpitScreen extends ConsumerWidget {
         children: [
           const Icon(Icons.check_circle_outline_rounded, size: 72, color: AppColors.accent),
           const SizedBox(height: AppSpacing.md),
-          Text('SESSION COMPLETE!', style: AppTypography.titleLarge),
+          Text(l10n.sessionCompleteTitle, style: AppTypography.titleLarge),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            '${(state.elapsedSeconds / 60).round()} minutes of Deep Work',
+            '${(state.elapsedSeconds / 60).round()} ${l10n.minutesOfDeepWork}',
             style: AppTypography.timerSub,
           ),
           const SizedBox(height: AppSpacing.lg),
@@ -443,12 +541,12 @@ class CockpitScreen extends ConsumerWidget {
                 ),
               );
             },
-            child: Text('Open Debrief & Reflection', style: AppTypography.button.copyWith(color: AppColors.background)),
+            child: Text(l10n.openDebrief, style: AppTypography.button.copyWith(color: AppColors.background)),
           ),
           const SizedBox(height: AppSpacing.sm),
           TextButton(
             onPressed: () => controller.resetToIdle(),
-            child: const Text('Dismiss', style: TextStyle(color: AppColors.textSecondary)),
+            child: Text(l10n.dismiss, style: const TextStyle(color: AppColors.textSecondary)),
           ),
         ],
       ),
@@ -461,6 +559,7 @@ class CockpitScreen extends ConsumerWidget {
     FocusSessionState state,
     FocusSessionNotifier controller,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       color: AppColors.background.withValues(alpha: 0.98),
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -469,15 +568,15 @@ class CockpitScreen extends ConsumerWidget {
         children: [
           const Icon(Icons.history_rounded, size: 56, color: AppColors.textSecondary),
           const SizedBox(height: AppSpacing.md),
-          Text('Session Recorded', style: AppTypography.titleLarge),
+          Text(l10n.sessionRecorded, style: AppTypography.titleLarge),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            '${(state.elapsedSeconds / 60).round()} min of focus preserved',
+            '${(state.elapsedSeconds / 60).round()} ${l10n.focusPreserved}',
             style: AppTypography.timerSub.copyWith(color: AppColors.textPrimary),
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
-            'Every minute of uninterrupted focus counts.',
+            l10n.encouragement,
             style: AppTypography.bodyRegular,
             textAlign: TextAlign.center,
           ),
@@ -503,12 +602,12 @@ class CockpitScreen extends ConsumerWidget {
                 ),
               );
             },
-            child: const Text('View Summary & Notes'),
+            child: Text(l10n.viewSummary),
           ),
           const SizedBox(height: AppSpacing.sm),
           TextButton(
             onPressed: () => controller.resetToIdle(),
-            child: const Text('Dismiss', style: TextStyle(color: AppColors.textSecondary)),
+            child: Text(l10n.dismiss, style: const TextStyle(color: AppColors.textSecondary)),
           ),
         ],
       ),

@@ -1,6 +1,9 @@
 package com.fliptofocus.flip_to_focus
 
+import android.app.Notification
+import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.hardware.Sensor
@@ -8,6 +11,8 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
@@ -23,6 +28,14 @@ class MainActivity : FlutterActivity(), SensorEventListener {
     private val SENSOR_CHANNEL = "com.fliptofocus.app/flip_sensor"
     private val DND_CHANNEL = "com.fliptofocus.app/dnd"
     private val VIBRATION_CHANNEL = "com.fliptofocus.app/vibration"
+    private val NOTIFICATION_CHANNEL = "com.fliptofocus.app/notifications"
+    private val PAUSE_CHANNEL_ID = "focus_pause_channel"
+    private val PAUSE_NOTIFICATION_ID = 2001
+    private val REMINDER_NOTIFICATION_ID = 2002
+    private val EXPIRE_NOTIFICATION_ID = 2003
+
+    private val handler = Handler(Looper.getMainLooper())
+    private val pendingRunnables = mutableListOf<Runnable>()
 
     private lateinit var sensorManager: SensorManager
     private var gravitySensor: Sensor? = null
@@ -107,6 +120,114 @@ class MainActivity : FlutterActivity(), SensorEventListener {
                 else -> result.notImplemented()
             }
         }
+
+        // MethodChannel for Emergency Pause out-of-app background notifications
+        createNotificationChannel()
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, NOTIFICATION_CHANNEL).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "showPauseNotification" -> {
+                    val title = call.argument<String>("title") ?: "Emergency Pause (2 min)"
+                    val message = call.argument<String>("message") ?: "Flip phone face-down to resume session"
+                    showNotification(PAUSE_NOTIFICATION_ID, title, message)
+                    result.success(true)
+                }
+                "schedulePauseReminder" -> {
+                    val firstReminderSeconds = call.argument<Int>("firstReminderSeconds") ?: 60
+                    val reminderTitle = call.argument<String>("reminderTitle") ?: "1 minute remaining!"
+                    val reminderMessage = call.argument<String>("reminderMessage") ?: "Resume your Deep Work before time expires."
+                    val expireSeconds = call.argument<Int>("expireSeconds") ?: 120
+                    val expireTitle = call.argument<String>("expireTitle") ?: "Pause Expired"
+                    val expireMessage = call.argument<String>("expireMessage") ?: "Session was interrupted and preserved."
+
+                    cancelAllNotifications()
+
+                    // Schedule intermediate 60s reminder
+                    val reminderRunnable = Runnable {
+                        showNotification(REMINDER_NOTIFICATION_ID, reminderTitle, reminderMessage)
+                        triggerHardwareVibration("alert")
+                    }
+                    pendingRunnables.add(reminderRunnable)
+                    handler.postDelayed(reminderRunnable, firstReminderSeconds * 1000L)
+
+                    // Schedule 120s final expiration notice
+                    val expireRunnable = Runnable {
+                        showNotification(EXPIRE_NOTIFICATION_ID, expireTitle, expireMessage)
+                        triggerHardwareVibration("alert")
+                    }
+                    pendingRunnables.add(expireRunnable)
+                    handler.postDelayed(expireRunnable, expireSeconds * 1000L)
+
+                    result.success(true)
+                }
+                "cancelNotifications" -> {
+                    cancelAllNotifications()
+                    result.success(true)
+                }
+                else -> result.notImplemented()
+            }
+        }
+    }
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val name = "Focus Pause & Reminders"
+            val descriptionText = "Notifications for deep work pause timeouts and reminders"
+            val importance = NotificationManager.IMPORTANCE_HIGH
+            val channel = NotificationChannel(PAUSE_CHANNEL_ID, name, importance).apply {
+                description = descriptionText
+                enableVibration(true)
+            }
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
+
+    private fun buildPendingIntent(): PendingIntent {
+        val intent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        } else {
+            PendingIntent.FLAG_UPDATE_CURRENT
+        }
+        return PendingIntent.getActivity(this, 0, intent, flags)
+    }
+
+    private fun showNotification(id: Int, title: String, message: String) {
+        try {
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val pendingIntent = buildPendingIntent()
+
+            val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                Notification.Builder(this, PAUSE_CHANNEL_ID)
+            } else {
+                @Suppress("DEPRECATION")
+                Notification.Builder(this)
+            }
+
+            builder.setContentTitle(title)
+                .setContentText(message)
+                .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
+                .setContentIntent(pendingIntent)
+                .setAutoCancel(true)
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                builder.setCategory(Notification.CATEGORY_REMINDER)
+                builder.setPriority(Notification.PRIORITY_HIGH)
+            }
+
+            notificationManager.notify(id, builder.build())
+        } catch (_: Exception) {}
+    }
+
+    private fun cancelAllNotifications() {
+        pendingRunnables.forEach { handler.removeCallbacks(it) }
+        pendingRunnables.clear()
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.cancel(PAUSE_NOTIFICATION_ID)
+        notificationManager.cancel(REMINDER_NOTIFICATION_ID)
+        notificationManager.cancel(EXPIRE_NOTIFICATION_ID)
     }
 
     private fun triggerHardwareVibration(type: String) {

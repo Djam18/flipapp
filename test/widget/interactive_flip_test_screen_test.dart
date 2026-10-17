@@ -5,6 +5,8 @@ import 'package:flip_to_focus/features/settings/presentation/interactive_flip_te
 import 'package:flip_to_focus/core/platform/native_sensor_service.dart';
 import '../mocks/fake_native_sensor_service.dart';
 
+import 'package:flip_to_focus/l10n/app_localizations.dart';
+
 void main() {
   testWidgets('InteractiveFlipTestScreen toggles between face up and face down simulation', (tester) async {
     final fakeSensor = FakeNativeSensorService();
@@ -15,6 +17,8 @@ void main() {
           nativeSensorServiceProvider.overrideWithValue(fakeSensor),
         ],
         child: const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: InteractiveFlipTestScreen(),
         ),
       ),
